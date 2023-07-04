@@ -144,9 +144,9 @@ def guardar_nueva_boleta(cliente_id, detalle_venta, monto_neto, monto_iva, monto
         if conn is not None:
             conn.close()
 
-def Guardar_nuevo_pedido(fecha, total, cliente_id):
+def Guardar_nuevo_pedido(fecha, producto_id, cliente_id):
     # Verificar que no hay datos nulos
-    if not fecha or not total or not cliente_id:
+    if not fecha or not producto_id or not cliente_id:
         showerror("Error", "Todos los campos deben ser llenados.")
         return
     try:
@@ -158,7 +158,7 @@ def Guardar_nuevo_pedido(fecha, total, cliente_id):
         )
         cursor = conn.cursor()
         # Llamar al procedimiento almacenado insertar_pedido
-        cursor.execute("CALL insertar_pedido(%s,%s,%s)", (fecha, total, cliente_id))
+        cursor.execute("CALL insertar_pedido(%s,%s,%s)", (fecha, producto_id, cliente_id))
         conn.commit()
         showinfo("Necu BD", "Datos Insertados")
     except (Exception, psycopg2.DatabaseError) as error:
@@ -194,8 +194,8 @@ def Guardar_nuevo_despacho(fecha,hora_salida,hora_entrega,cliente_id,empleado_id
         if cursor:
             conn.close()
 
-def Guardar_nuevo_pago(estado,monto_total,cod_pago):
-    if not estado or not monto_total or not cod_pago:
+def Guardar_nuevo_pago(estado,cod_pago):
+    if not estado or not cod_pago:
         showerror("Error", "Todos los campos deben ser llenados.")
         return
     try:
@@ -207,7 +207,7 @@ def Guardar_nuevo_pago(estado,monto_total,cod_pago):
         )
         cursor = conn.cursor()
         # Llamar al procedimiento almacenado insertar_pago
-        cursor.execute("CALL insertar_pago(%s,%s,%s)", (estado,monto_total,cod_pago))
+        cursor.execute("CALL insertar_pago(%s,%s)", (estado,cod_pago))
         conn.commit()
         showinfo("Necu BD",
         "Datos Insertados")
@@ -369,7 +369,7 @@ def mostrar_id_producto(v3):
         database='necubd'
     )
     cursor=conn.cursor()
-    query= 'SELECT producto_id,nombre FROM producto join proveedor using(producto_id) ORDER BY producto_id'
+    query= 'SELECT producto_id,nombre FROM producto ORDER BY producto_id'
     cursor.execute(query)
 
     row=cursor.fetchall()
@@ -392,7 +392,7 @@ def mostrar_id_producto2(v3):
         database='necubd'
     )
     cursor=conn.cursor()
-    query= 'SELECT producto_id,nombre FROM producto join proveedor using(producto_id) ORDER BY producto_id'
+    query= 'SELECT producto_id,nombre FROM producto ORDER BY producto_id'
     cursor.execute(query)
 
     row=cursor.fetchall()
@@ -438,7 +438,7 @@ def mostrar_cod_pago(v3):
         database='necubd'
     )
     cursor=conn.cursor()
-    query= 'SELECT cod_pago FROM pago ORDER BY cod_pago'
+    query= 'SELECT cod_pago FROM pedido ORDER BY cod_pago'
     cursor.execute(query)
 
     row=cursor.fetchall()
@@ -461,7 +461,7 @@ def mostrar_cod_pago2(v3):
         database='necubd'
     )
     cursor=conn.cursor()
-    query= 'SELECT cod_pago FROM pago ORDER BY cod_pago'
+    query= 'SELECT cod_pago FROM pedido ORDER BY cod_pago'
     cursor.execute(query)
 
     row=cursor.fetchall()
@@ -648,14 +648,15 @@ def mostrar_id_proveedor2(v3):
     query= 'SELECT proveedor_id FROM proveedor ORDER BY proveedor_id'
     cursor.execute(query)
     row=cursor.fetchall()
+    
+    listbox=Listbox(v3, width=20, height=5)
+    listbox.grid(row=10,columnspan=1,column=1)
+    for x in row:
+        listbox.insert(END, x)
+    
     conn.commit()
     cursor.close()
     conn.close()
-    listbox=Listbox(v3, width=20, height=5)
-    listbox.grid(row=10,columnspan=1,column=1)
-
-    for x in row:
-        listbox.insert(END, x)
 
 def mostrar_clientes(v3):
     conn=psycopg2.connect(
@@ -969,7 +970,7 @@ def modificar_cliente(nombre,apellido,rut,direccion,telefono,id_cliente):
     conn.close()
     cursor.close()
 
-def modificar_pedido(fecha,total,cliente_id,cod_pago):
+def modificar_pedido(fecha,producto_id,cliente_id,cod_pago):
     conn = psycopg2.connect(
         host = 'localhost',
         user = 'postgres',
@@ -977,8 +978,8 @@ def modificar_pedido(fecha,total,cliente_id,cod_pago):
         database = 'necubd'
     )
     cursor = conn.cursor()
-    query = 'UPDATE pedido SET fecha=%s,total=%s,cliente_id=%s WHERE cod_pago=%s'
-    datos=(fecha,total,cliente_id,cod_pago)
+    query = 'UPDATE pedido SET fecha=%s,producto_id=%s,cliente_id=%s WHERE cod_pago=%s'
+    datos=(fecha,producto_id,cliente_id,cod_pago)
     cursor.execute(query,datos)
     conn.commit()
     showinfo("Necu BD",
@@ -1174,7 +1175,6 @@ def ventana8():
     espacio1=Label(v6,text="Factura").grid(row=0,column=0)
     label1 = Label(v6,text="Ingrese Id del proveedor: ").grid(row=1,column=0)
     label1 = Label(v6,text="Ingrese Id del producto: ").grid(row=2,column=0)
-    label1 = Label(v6,text="Ingrese el codigo: ").grid(row=3,column=0)
     label1 = Label(v6,text="Ingrese el tipo de producto: ").grid(row=3,column=0)
     label1 = Label(v6,text="Ingrese el monto total: ").grid(row=4,column=0)
     proveedor_id = Entry(v6)
@@ -1249,19 +1249,12 @@ def ventana10():
     v6.title("Insertar Datos")
     espacio1=Label(v6,text="pago").grid(row=0,column=0)
     label1 = Label(v6,text="Ingrese Estado del pago: ").grid(row=1,column=0)
-    label2 = Label(v6,text="Ingrese Monto Total: ").grid(row=2,column=0)
-    label2 = Label(v6,text="Ingrese codigo de pago: ").grid(row=3,column=0)
-    
+    label2 = Label(v6,text="Ingrese codigo de pago: ").grid(row=2,column=0)
     estado = Entry(v6)
     estado.grid(row=1,column=1)
-
-    Monto = Entry(v6)
-    Monto.grid(row=2,column=1)
-
     cod = Entry(v6)
-    cod.grid(row=3,column=1)
-    
-    boton_guardar = Button(v6,text="Guardar Pago",command=lambda:(Guardar_nuevo_pago(estado.get(), Monto.get(), cod.get()),v6.destroy()))
+    cod.grid(row=2,column=1)
+    boton_guardar = Button(v6,text="Guardar Pago",command=lambda:(Guardar_nuevo_pago(estado.get(), cod.get()),v6.destroy()))
     boton_guardar.grid(row=8,column=1)
     mostrar_cod_pago2(v6)
 
@@ -1271,20 +1264,21 @@ def ventana11():
     v6.title("Insertar Datos")
     espacio1=Label(v6,text="Pedido").grid(row=0,column=0)
     label1 = Label(v6,text="Ingrese fecha pedido: ").grid(row=1,column=0)
-    label1 = Label(v6,text="Ingrese el monto total del pedido: ").grid(row=2,column=0)
-    label1 = Label(v6,text="Ingrese el ID del cliente : ").grid(row=3,column=0)   
+    label1 = Label(v6,text="Ingrese el ID del producto a pedir: ").grid(row=2,column=0)
+    label1 = Label(v6,text="Ingrese el ID del cliente: ").grid(row=3,column=0)   
     fecha = Entry(v6)
     fecha.grid(row=1,column=1)
-    total = Entry(v6)
-    total.grid(row=2,column=1)
+    producto_id = Entry(v6)
+    producto_id.grid(row=2,column=1)
     cliente_id = Entry(v6)
     cliente_id.grid(row=3,column=1)
     label1= Label(v6,text="| Id_cliente |").grid(row=9,column=1)
-    mostrar_id_cliente(v6)
+    mostrar_id_cliente2(v6)
+    mostrar_id_producto2(v6)
     
     boton_guardar = Button(v6,text="Guardar Pedido",command=lambda:(Guardar_nuevo_pedido(
         fecha.get(), 
-        total.get(), 
+        producto_id.get(), 
         cliente_id.get()),v6.destroy()))
     boton_guardar.grid(row=4,column=1)
 
