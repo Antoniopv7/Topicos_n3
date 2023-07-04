@@ -1,30 +1,6 @@
-CREATE SEQUENCE cliente_id
-    minvalue 1
-	increment by 1;
-
-CREATE SEQUENCE despacho_id
-    minvalue 1
-	increment by 1;
-
-CREATE SEQUENCE producto_id
-    minvalue 1
-	increment by 1;
-
-CREATE SEQUENCE cod_pago
-    minvalue 1
-	increment by 1;
-
-CREATE SEQUENCE proveedor_id
-    minvalue 1
-	increment by 1;
-
-CREATE SEQUENCE empleado_id
-    minvalue 1
-	increment by 1;
-
 CREATE TABLE CLIENTE
 (
-    cliente_id INTEGER DEFAULT nextval('cliente_id') PRIMARY KEY,
+    cliente_id INTEGER PRIMARY KEY,
     nombre     VARCHAR (30),
     apellido   VARCHAR (30),
     rut        VARCHAR (30),
@@ -34,17 +10,17 @@ CREATE TABLE CLIENTE
 
 CREATE TABLE DESPACHO
 (
-    despacho_id   INTEGER DEFAULT nextval('despacho_id') PRIMARY KEY ,
+    despacho_id   INTEGER PRIMARY KEY ,
     fecha         DATE,
     hora_salida   TIME,
     hora_entrega  TIME,
-    cliente_id    INTEGER not null,
-    empleado_id   INTEGER not null
+    cliente_id    INTEGER,
+    empleado_id   INTEGER 
 );
 
 CREATE TABLE PRODUCTO
 ( 
-    producto_id INTEGER DEFAULT nextval('producto_id') PRIMARY KEY,
+    producto_id INTEGER PRIMARY KEY,
 	nombre      VARCHAR(30) ,
     descripcion VARCHAR(30),
     valor       INTEGER  ,
@@ -53,51 +29,79 @@ CREATE TABLE PRODUCTO
 
 CREATE TABLE PEDIDO
 (
-    cod_pago       INTEGER DEFAULT nextval('cod_pago') PRIMARY KEY,
+    cod_pago       INTEGER PRIMARY KEY,
     fecha          DATE,
-    monto_total    INTEGER,
-    cliente_id     INTEGER not null
+	producto_id    INTEGER,
+    cliente_id     INTEGER 
 );
 
 CREATE TABLE FACTURA
 (
-    proveedor_id    INTEGER NOT NULL,
-    producto_id     INTEGER NOT NULL,
+    proveedor_id    INTEGER,
+    producto_id     INTEGER,
     tipo_producto   VARCHAR(30),
     monto_total     INTEGER 
 );
 
 CREATE TABLE PROVEEDOR 
 (
-    proveedor_id    INTEGER DEFAULT nextval('proveedor_id')PRIMARY KEY,
-    producto_id     INTEGER NOT NULL
+    proveedor_id    INTEGER PRIMARY KEY,
+    producto_id     INTEGER 
 );
 
 CREATE TABLE BOLETA
 (
-    cliente_id      INTEGER NOT NULL,
+    cliente_id      INTEGER ,
     detalle_venta   VARCHAR(50),
     monto_neto      INTEGER ,
     monto_iva       INTEGER ,
     monto_total     INTEGER ,
     fecha           DATE ,
-	cod_pago        INTEGER NOT NULL
+	cod_pago        INTEGER
 );
 
 CREATE TABLE PAGO
 (
-    estado          BOOLEAN NOT NULL,
-	monto_total     INTEGER,
-    cod_pago        INTEGER NOT NULL
+    estado          BOOLEAN,
+    cod_pago        INTEGER 
 );
 
 CREATE TABLE EMPLEADO
 (
-    empleado_id     INTEGER DEFAULT nextval('empleado_id') PRIMARY KEY,
+    empleado_id     INTEGER PRIMARY KEY,
 	nombre          VARCHAR(30),
 	apellido        VARCHAR(30),
 	rut             VARCHAR(30),
 	sueldo          INTEGER
+);
+
+CREATE TABLE RESPALDO_BOLETA
+(
+	cliente_id      INTEGER ,
+    detalle_venta   VARCHAR(50),
+    monto_neto      INTEGER ,
+    monto_iva       INTEGER ,
+    monto_total     INTEGER ,
+    fecha           DATE ,
+	cod_pago        INTEGER
+);
+
+CREATE TABLE RESPALDO_FACTURA
+(
+	proveedor_id    INTEGER,
+    producto_id     INTEGER,
+    tipo_producto   VARCHAR(30),
+    monto_total     INTEGER 
+);
+
+CREATE TABLE RESPALDO_DESPACHO
+(
+	despacho_id   INTEGER,
+    fecha         DATE,
+    hora_salida   TIME,
+    hora_entrega  TIME,
+    cliente_id    INTEGER,
+    empleado_id   INTEGER 
 );
 
 ALTER TABLE despacho add foreign key (cliente_id) references cliente(cliente_id) on delete cascade;
@@ -109,3 +113,6 @@ ALTER TABLE factura add foreign key(proveedor_id) references proveedor(proveedor
 ALTER TABLE factura add foreign key(producto_id) references producto(producto_id) on delete cascade;
 ALTER TABLE pedido add foreign key(cliente_id) references cliente(cliente_id) on delete cascade;
 ALTER TABLE pago add foreign key(cod_pago) references pedido(cod_pago) on delete cascade;
+ALTER TABLE pedido add foreign key(producto_id) references producto(producto_id) on delete cascade;
+
+select * from factura;
